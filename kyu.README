@@ -1,1 +1,8 @@
+conda create -n ocpp_fuzz python=3.8
 conda activate ocpp_fuzz
+
+pip install websockets
+pip install .
+
+
+python ./test_cs.py
