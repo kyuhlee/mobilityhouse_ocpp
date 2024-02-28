@@ -193,8 +193,7 @@ class ChargePoint:
     initiated and received by the Central System
     """
 
-    #def __init__(self, id, connection, response_timeout=30):
-    def __init__(self, id, raw_msg, response_timeout=30):
+    def __init__(self, id, connection, response_timeout=30):
         """
 
         Args:
@@ -206,7 +205,6 @@ class ChargePoint:
 
         """
         self.id = id
-        print("ChargePoint: __init__")
         # The maximum time in seconds it may take for a CP to respond to a
         # CALL. An asyncio.TimeoutError will be raised if this limit has been
         # exceeded.
@@ -214,7 +212,7 @@ class ChargePoint:
         self.raw_msg = raw_msg
 
         # A connection to the client. Currently this is an instance of gh
-        #self._connection = connection
+        self._connection = connection
 
         # A dictionary that hooks for Actions. So if the CS receives a it will
         # look up the Action into this map and execute the corresponding hooks
@@ -234,12 +232,11 @@ class ChargePoint:
 
     async def start(self):
         print("ChargePoint: start, msg: ", self.raw_msg)
-        #while True:
-        #    message = await self._connection.recv()
-        #    LOGGER.info("%s: receive message %s", self.id, message)
+        while True:
+            message = await self._connection.recv()
+            LOGGER.info("%s: receive message %s", self.id, message)
 
-        #    await self.route_message(message)
-        await self.route_message(self.raw_msg)
+            await self.route_message(message)
 
     async def route_message(self, raw_msg):
         """
