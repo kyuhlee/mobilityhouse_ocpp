@@ -16,6 +16,7 @@ except ModuleNotFoundError:
 from ocpp.routing import on
 from ocpp.v201 import ChargePoint as cp
 from ocpp.v201 import call_result
+from ocpp.v201 import call
 
 logging.basicConfig(level=logging.INFO)
 
@@ -23,14 +24,15 @@ logging.basicConfig(level=logging.INFO)
 class ChargePoint(cp):
     @on("BootNotification")
     def on_boot_notification(self, charging_station, reason, **kwargs):
-        return call_result.BootNotificationPayload(
+        print("Got a BootNotification!")
+        return call_result.BootNotification(
             current_time=datetime.utcnow().isoformat(), interval=10, status="Accepted"
         )
 
     @on("Heartbeat")
     def on_heartbeat(self):
         print("Got a Heartbeat!")
-        return call_result.HeartbeatPayload(
+        return call_result.Heartbeat(
             current_time=datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S") + "Z"
         )
 
@@ -63,13 +65,22 @@ async def on_connect(websocket, path):
 
     await charge_point.start()
 
-
 async def main():
-    print("test wrapper start")
+    print("[KYU] test wrapper start")
     charge_point_id = "test_cp"
     message = "test_msg"
-    charge_point = ChargePoint(charge_point_id, message)
-    await charge_point.start()
+    #payload = call.Heartbeat()
+
+    payload = call.BootNotification(
+        charging_station={"model": "Wallbox XYZ", "vendor_name": "anewone"},
+        reason="PowerUp",
+    )
+
+
+    charge_point = ChargePoint(charge_point_id)
+    await charge_point.localcall(payload)
+    print("[KYU] message: ",payload)
+    #await charge_point.start(message)
     #  deepcode ignore BindToAllNetworkInterfaces: <Example Purposes>
     """
     server = await websockets.serve(

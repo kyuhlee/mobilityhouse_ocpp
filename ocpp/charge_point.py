@@ -194,7 +194,7 @@ class ChargePoint:
     """
 
     #def __init__(self, id, connection, response_timeout=30):
-    def __init__(self, id, raw_msg, response_timeout=30):
+    def __init__(self, id, response_timeout=30):
         """
 
         Args:
@@ -206,12 +206,12 @@ class ChargePoint:
 
         """
         self.id = id
-        print("ChargePoint: __init__")
+        print("[KYU] ChargePoint: __init__")
         # The maximum time in seconds it may take for a CP to respond to a
         # CALL. An asyncio.TimeoutError will be raised if this limit has been
         # exceeded.
         self._response_timeout = response_timeout
-        self.raw_msg = raw_msg
+        #self.raw_msg = raw_msg
 
         # A connection to the client. Currently this is an instance of gh
         #self._connection = connection
@@ -232,14 +232,14 @@ class ChargePoint:
         # for testing purposes to have predictable unique ids.
         self._unique_id_generator = uuid.uuid4
 
-    async def start(self):
-        print("ChargePoint: start, msg: ", self.raw_msg)
+    async def start(self, raw_msg):
+        print("[KYU] ChargePoint: start, msg: ", raw_msg)
         #while True:
         #    message = await self._connection.recv()
         #    LOGGER.info("%s: receive message %s", self.id, message)
 
         #    await self.route_message(message)
-        await self.route_message(self.raw_msg)
+        await self.route_message(raw_msg)
 
     async def route_message(self, raw_msg):
         """
@@ -360,6 +360,49 @@ class ChargePoint:
             # when no '_on_after' hook is installed.
             pass
         return response
+    async def localcall(self, payload, suppress=True, unique_id=None):
+        """
+        Send Call message to client and return payload of response.
+
+        The given payload is transformed into a Call object by looking at the
+        type of the payload. A payload of type BootNotificationPayload will
+        turn in a Call with Action BootNotification, a HeartbeatPayload will
+        result in a Call with Action Heartbeat etc.
+
+        A timeout is raised when no response has arrived before expiring of
+        the configured timeout.
+
+        When waiting for a response no other Call message can be send. So this
+        function will wait before response arrives or response timeout has
+        expired. This is in line the OCPP specification
+
+        Suppress is used to maintain backwards compatibility. When set to True,
+        if response is a CallError, then this call will be suppressed. When
+        set to False, an exception will be raised for users to handle this
+        CallError.
+
+        """
+        print("[KYU] ChargePoint.localcall, payload:", payload)
+        camel_case_payload = snake_to_camel_case(serialize_as_dict(payload))
+
+        unique_id = (
+            unique_id if unique_id is not None else str(self._unique_id_generator())
+        )
+
+        action_name = payload.__class__.__name__
+        # Due to deprecated call and callresults, remove in the future.
+        if "Payload" in payload.__class__.__name__:
+            action_name = payload.__class__.__name__[:-7]
+
+        call = Call(
+            unique_id=unique_id,
+            action=action_name,
+            payload=remove_nones(camel_case_payload),
+        )
+
+        validate_payload(call, self._ocpp_version)
+
+        await self.route_message(call.to_json())
 
     async def call(self, payload, suppress=True, unique_id=None):
         """
@@ -383,6 +426,7 @@ class ChargePoint:
         CallError.
 
         """
+        print("[KYU] ChargePoint.call, payload:", payload)
         camel_case_payload = snake_to_camel_case(serialize_as_dict(payload))
 
         unique_id = (
@@ -458,4 +502,5 @@ class ChargePoint:
 
     async def _send(self, message):
         LOGGER.info("%s: send %s", self.id, message)
-        await self._connection.send(message)
+        print("[KYU] ChargePoint._send: ", message)
+        #await self._connection.send(message)
