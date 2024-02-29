@@ -65,17 +65,24 @@ async def on_connect(websocket, path):
 
     await charge_point.start()
 
+def prepare_payload(type=2):
+    if type == 1:
+        payload = call.Heartbeat()
+    elif type == 2:
+        payload = call.BootNotification(
+            charging_station={"model": "Wallbox XYZ", "vendor_name": "anewone"},
+            reason="PowerUp",
+        )
+    else:
+        payload = "invalid"
+
+    return payload
+
 async def main():
     print("[KYU] test wrapper start")
     charge_point_id = "test_cp"
-    message = "test_msg"
-    #payload = call.Heartbeat()
 
-    payload = call.BootNotification(
-        charging_station={"model": "Wallbox XYZ", "vendor_name": "anewone"},
-        reason="PowerUp",
-    )
-
+    payload = prepare_payload(1)
 
     charge_point = ChargePoint(charge_point_id)
     await charge_point.localcall(payload)
