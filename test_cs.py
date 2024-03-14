@@ -82,10 +82,12 @@ async def main():
     print("[KYU] test wrapper start")
     charge_point_id = "test_cp"
 
-    payload = prepare_payload(1)
+    #payload = prepare_payload(1)
+    payload = '[2,"3f2409f0-85a7-426c-982d-77e0e6412356","Heartbeat",{}]'
 
     charge_point = ChargePoint(charge_point_id)
-    await charge_point.localcall(payload)
+    #await charge_point.localcall(payload)
+    await charge_point.route_message(payload)
     print("[KYU] message: ",payload)
     #await charge_point.start(message)
     #  deepcode ignore BindToAllNetworkInterfaces: <Example Purposes>

@@ -249,6 +249,7 @@ class ChargePoint:
         If the message is of type CallResult or CallError the message is passed
         to the call() function via the response_queue.
         """
+        print("[KYU] route_message: raw_msg: ", raw_msg)
         try:
             msg = unpack(raw_msg)
         except OCPPError as e:
