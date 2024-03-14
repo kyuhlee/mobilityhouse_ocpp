@@ -1,6 +1,8 @@
 import asyncio
 import logging
 from datetime import datetime
+from argparse import Namespace
+from pyjfuzz.lib import *
 
 try:
     import websockets
@@ -19,6 +21,9 @@ from ocpp.v201 import call_result
 from ocpp.v201 import call
 
 logging.basicConfig(level=logging.INFO)
+
+fuzz_config = PJFConfiguration(Namespace(json={"test": ["1", 2, True]}, nologo=True, level=6))
+fuzzer = PJFFactory(fuzz_config)
 
 
 class ChargePoint(cp):
@@ -83,12 +88,16 @@ async def main():
     charge_point_id = "test_cp"
 
     #payload = prepare_payload(1)
-    payload = '[2,"3f2409f0-85a7-426c-982d-77e0e6412356","Heartbeat",{}]'
+    #payload = '[2,"3f2409f0-85a7-426c-982d-77e0e6412356","Heartbeat",{}]'
 
     charge_point = ChargePoint(charge_point_id)
     #await charge_point.localcall(payload)
-    await charge_point.route_message(payload)
-    print("[KYU] message: ",payload)
+
+    for i in range(0, 10):
+        payload = fuzzer.fuzzed
+        print("[KYU] Iteration #%d: "% i, payload)
+        await charge_point.route_message(payload)
+
     #await charge_point.start(message)
     #  deepcode ignore BindToAllNetworkInterfaces: <Example Purposes>
     """
