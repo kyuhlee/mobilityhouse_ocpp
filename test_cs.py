@@ -22,7 +22,9 @@ from ocpp.v201 import call
 
 logging.basicConfig(level=logging.INFO)
 
+# Heartbeat: '[2,"3f2409f0-85a7-426c-982d-77e0e6412356","Heartbeat",{}]'
 fuzz_config = PJFConfiguration(Namespace(json={"test": ["1", 2, True]}, nologo=True, level=6))
+#fuzz_config = PJFConfiguration(Namespace(json={"test": ["1", 2, True]}, nologo=True, level=6))
 fuzzer = PJFFactory(fuzz_config)
 
 
@@ -81,22 +83,29 @@ def prepare_payload(type=2):
     else:
         payload = "invalid"
 
+    print("[KYU] prepare_payload: ", payload)
     return payload
 
 async def main():
+
     print("[KYU] test wrapper start")
     charge_point_id = "test_cp"
 
-    #payload = prepare_payload(1)
-    #payload = '[2,"3f2409f0-85a7-426c-982d-77e0e6412356","Heartbeat",{}]'
-
     charge_point = ChargePoint(charge_point_id)
-    #await charge_point.localcall(payload)
 
-    for i in range(0, 10):
-        payload = fuzzer.fuzzed
-        print("[KYU] Iteration #%d: "% i, payload)
-        await charge_point.route_message(payload)
+    json_test = True
+    if json_test == True:
+        payload = '[2,"3f2409f0-85a7-426c-982d-77e0e6412356","Heartbeat",{}]'
+        # payload = '[2,"fc54df3e-16ff-4a17-a96f-5f28f1808aac","BootNotification",{"chargingStation":{"model":"Wallbox XYZ","vendorName":"anewone"},"
+        # reason":"PowerUp"}]'
+        for i in range(0, 10):
+            #payload = fuzzer.fuzzed
+            print("[KYU] Iteration #%d: "% i, payload)
+            await charge_point.route_message(payload)
+    else:
+        payload = prepare_payload(1)
+        await charge_point.localcall(payload)
+
 
     #await charge_point.start(message)
     #  deepcode ignore BindToAllNetworkInterfaces: <Example Purposes>
