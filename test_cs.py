@@ -23,8 +23,8 @@ from ocpp.v201 import call
 logging.basicConfig(level=logging.INFO)
 
 # Heartbeat: '[2,"3f2409f0-85a7-426c-982d-77e0e6412356","Heartbeat",{}]'
-fuzz_config = PJFConfiguration(Namespace(json={"test": ["1", 2, True]}, nologo=True, level=6))
 #fuzz_config = PJFConfiguration(Namespace(json={"test": ["1", 2, True]}, nologo=True, level=6))
+fuzz_config = PJFConfiguration(Namespace(json=[1, "A", "Heartbeat", {}], nologo=True, level=3, debug=True))
 fuzzer = PJFFactory(fuzz_config)
 
 
@@ -94,12 +94,17 @@ async def main():
     charge_point = ChargePoint(charge_point_id)
 
     json_test = True
+    fuzz_test = False
     if json_test == True:
-        payload = '[2,"3f2409f0-85a7-426c-982d-77e0e6412356","Heartbeat",{}]'
-        # payload = '[2,"fc54df3e-16ff-4a17-a96f-5f28f1808aac","BootNotification",{"chargingStation":{"model":"Wallbox XYZ","vendorName":"anewone"},"
-        # reason":"PowerUp"}]'
-        for i in range(0, 10):
-            #payload = fuzzer.fuzzed
+        for i in range(0, 1000):
+            if fuzz_test == True:
+                payload = fuzzer.fuzzed
+                payload = "[2" + payload[payload.find(","):]
+            else:
+                payload = '[4,"3f2409f0-85a7-426c-982d-77e0e6412356","Heartbeat",{}]'
+                payload = '[2, false, false, {}]' # cause type error
+                payload = '[2, ["A"], ["Heartbeat"], {}]' # cause unhashable type error
+                #payload = '[2,"fc54df3e-16ff-4a17-a96f-5f28f1808aac","BootNotification",{"chargingStation":{"model":"Wallbox XYZ","vendorName":"anewone"},"reason":"PowerUp"}]'
             print("[KYU] Iteration #%d: "% i, payload)
             await charge_point.route_message(payload)
     else:

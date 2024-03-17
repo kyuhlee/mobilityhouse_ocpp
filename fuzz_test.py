@@ -7,5 +7,8 @@ from pyjfuzz.lib import *
 config = PJFConfiguration(Namespace(json=[1, "1", "Heartbeat", 1], nologo=True, level=3, debug=True))
 fuzzer = PJFFactory(config)
 #while True:
-for i in range(0, 10):
-    print(fuzzer.fuzzed)
+for i in range(0, 1):
+    str = fuzzer.fuzzed
+    print(str)
+    str = "[1" +str[str.find(","):]
+    print(str)
