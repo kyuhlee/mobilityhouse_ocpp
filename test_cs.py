@@ -93,22 +93,27 @@ async def main():
 
     charge_point = ChargePoint(charge_point_id)
 
-    json_test = True
+    json_test = False
     fuzz_test = False
     if json_test == True:
-        for i in range(0, 1000):
+        if fuzz_test == True:
+            max_loop = 1000
+        else:
+            max_loop = 1
+
+        for i in range(0, max_loop):
             if fuzz_test == True:
                 payload = fuzzer.fuzzed
                 payload = "[2" + payload[payload.find(","):]
             else:
                 payload = '[4,"3f2409f0-85a7-426c-982d-77e0e6412356","Heartbeat",{}]'
-                payload = '[2, false, false, {}]' # cause type error
-                payload = '[2, ["A"], ["Heartbeat"], {}]' # cause unhashable type error
+                payload = '[2, false, False, {}]' # cause type error
+                #payload = '[2, ["A"], ["Heartbeat"], {}]' # cause unhashable type error
                 #payload = '[2,"fc54df3e-16ff-4a17-a96f-5f28f1808aac","BootNotification",{"chargingStation":{"model":"Wallbox XYZ","vendorName":"anewone"},"reason":"PowerUp"}]'
             print("[KYU] Iteration #%d: "% i, payload)
             await charge_point.route_message(payload)
     else:
-        payload = prepare_payload(1)
+        payload = prepare_payload(2)
         await charge_point.localcall(payload)
 
 
